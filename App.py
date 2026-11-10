@@ -1,151 +1,104 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimarket Online Sederhana</title>
+import streamlit as st
+
+# Konfigurasi halaman
+st.set_page_config(page_title="Minimarket Online Berkah", page_icon="🏪", layout="wide")
+
+# CSS Styling tambahan (harus dibungkus dalam st.markdown dengan unsafe_allow_html=True)
+st.markdown("""
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body {
-            background-color: #f4f6f9;
-            color: #333;
-        }
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            max-width: 1200px;
-            margin: 20px auto;
-            gap: 20px;
-            padding: 0 15px;
-        }
-        .product-section {
-            flex: 2;
-            min-width: 300px;
-        }
-        .cart-section {
-            flex: 1;
-            min-width: 280px;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            height: fit-content;
-        }
-        h2 {
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .product-card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .product-card h3 {
-            font-size: 16px;
-            margin-bottom: 8px;
-        }
-        .product-card p {
-            color: #e74c3c;
-            font-weight: bold;
-            margin-bottom: 12px;
-        }
-        .btn {
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .btn:hover {
-            background-color: #219653;
-        }
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 8px;
-            font-size: 14px;
-        }
-        .cart-total {
-            margin-top: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            border-top: 2px solid #ddd;
-            padding-top: 10px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .btn-checkout {
-            display: block;
-            width: 100%;
-            background-color: #2980b9;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 15px;
-            cursor: pointer;
-            font-weight: bold;
-            text-align: center;
-        }
-        .btn-checkout:hover {
-            background-color: #2471a3;
-        }
+    .product-card {
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
+    }
     </style>
-</head>
-<body>
+""", unsafe_allow_html=True)
 
-    <header>
-        <h1>🏪 Minimarket Online Berkah</h1>
-        <p>Belanja kebutuhan harian lebih mudah dan cepat</p>
-    </header>
+# Judul Aplikasi
+st.title("🏪 Minimarket Online Berkah")
+st.write("Belanja kebutuhan harian lebih mudah dan cepat")
+st.markdown("---")
 
-    <div class="container">
-        <!-- Daftar Produk -->
-        <div class="product-section">
-            <h2>Daftar Produk</h2>
-            <div class="product-grid" id="product-grid">
-                <!-- Produk akan dimuat lewat JavaScript -->
-            </div>
-        </div>
+# Data Produk Minimarket
+products = [
+    {"id": 1, "name": "Minyak Goreng 2L", "price": 35000},
+    {"id": 2, "name": "Beras Premium 5kg", "price": 68000},
+    {"id": 3, "name": "Gula Pasir 1kg", "price": 15500},
+    {"id": 4, "name": "Telur Ayam 1kg", "price": 28000},
+    {"id": 5, "name": "Mie Instan (1 Bungkus)", "price": 3000},
+    {"id": 6, "name": "Susu UHT 1L", "price": 19000},
+    {"id": 7, "name": "Teh Celup Kotak", "price": 9000},
+    {"id": 8, "name": "Sabun Mandi Batang", "price": 4500}
+]
 
-        <!-- Keranjang Belanja -->
-        <div class="cart-section">
-            <h2>Keranjang Belanja</h2>
-            <div id="cart-items">
-                <p style="color: #777; font-size: 14px;">Keranjang masih kosong.</p>
-            </div>
-            <div class="cart-total">
-                <span>Total:</span>
-                <span id="cart-total-price">Rp 0</span>
-            </div>
-            <button class="btn-checkout" onclick="checkout()">Checkout Pesanan</button>
-        </div>
-    </div>
+# Inisialisasi Keranjang Belanja di Session State Streamlit
+if "cart" not in st.session_state:
+    st.session_state.cart = []
 
-    <script src="script.js"></script>
-</body>
-</html>
+# Layout Kolom: Kiri untuk Produk, Kanan untuk Keranjang
+col1, col2 = st.kol2 = st.columns([2, 1]) if hasattr(st, 'columns') else (st.container(), st.container())
+
+# Jika menggunakan st.columns versi standar:
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    st.subheader("Daftar Produk")
+    
+    # Menampilkan produk dalam grid 3 kolom
+    grid_cols = st.columns(3)
+    for index, product in enumerate(products):
+        with grid_cols[index % 3]:
+            st.markdown(f"""
+                <div class="product-card">
+                    <h4>{product['name']}</h4>
+                    <p style="color: #e74c3c; font-weight: bold;">Rp {product['price']:,}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("Tambah", key=f"add_{product['id']}"):
+                # Cek apakah produk sudah ada di keranjang
+                found = False
+                for item in st.session_state.cart:
+                    if item["id"] == product["id"]:
+                        item["quantity"] += 1
+                        found = True
+                        break
+                if not found:
+                    st.session_state.cart.append({
+                        "id": product["id"],
+                        "name": product["name"],
+                        "price": product["price"],
+                        "quantity": 1
+                    })
+                st.success(f"{product['name']} ditambahkan!")
+                st.rerun()
+
+with col2:
+    st.subheader("🛒 Keranjang Belanja")
+    
+    if not st.session_state.cart:
+        st.info("Keranjang masih kosong.")
+    else:
+        total = 0
+        for item in st.session_state.cart:
+            item_total = item["price"] * item["quantity"]
+            total += item_total
+            
+            st.write(f"**{item['name']}**")
+            st.text(f"{item['quantity']} x Rp {item['price']:,} = Rp {item_total:,}")
+            
+            if st.button("Hapus", key=f"del_{item['id']}"):
+                st.session_state.cart = [i for i in st.session_state.cart if i["id"] != item["id"]]
+                st.rerun()
+            st.markdown("---")
+            
+        st.markdown(f"### Total: Rp {total:,}")
+        
+        if st.button("Checkout Pesanan", type="primary"):
+            st.success(f"Terima kasih! Pesanan senilai Rp {total:,} berhasil diproses.")
+            st.session_state.cart = []
+            st.rerun()
