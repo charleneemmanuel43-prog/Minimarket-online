@@ -1,131 +1,63 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
-# 1. Konfigurasi Halaman
-st.set_page_config(page_title="FlashMart Store Pro", page_icon="⚡", layout="centered")
+# Konfigurasi halaman
+st.set_page_config(page_title="Minimarket Online Berkah", page_icon="🏪", layout="wide")
 
-# 2. Custom CSS untuk mempercantik tampilan mirip aplikasi modern
+# CSS Styling tambahan
 st.markdown("""
     <style>
-    /* Hilangkan padding atas bawaan streamlit */
-    .block-container {
-        padding-top: 1rem;
-        padding-bottom: 2rem;
-        max-width: 480px; /* Tampilan ala mobile app */
-    }
-    
-    /* Header Hijau */
-    .main-header {
-        background: linear-gradient(135deg, #00b050, #009943);
-        padding: 20px;
-        border-radius: 0 0 20px 20px;
-        color: white;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        margin-bottom: 15px;
-    }
-    
-    /* Banner Voucher */
-    .promo-banner {
-        background: linear-gradient(135deg, #f39c12, #e67e22);
-        color: white;
-        padding: 12px;
-        border-radius: 10px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 13px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    /* Kartu Produk */
     .product-card {
         background-color: #ffffff;
-        border: 1px solid #eaeaea;
-        border-radius: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
         padding: 15px;
         text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         margin-bottom: 15px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. Header & Search Bar
-st.markdown("""
-    <div class="main-header">
-        <h2 style="margin:0; font-size: 22px;">⚡ FlashMart Store Pro</h2>
-    </div>
-""", unsafe_allow_html=True)
-
-# Kotak Pencarian
-search_query = st.text_input("", placeholder="🔍 Cari kebutuhan harian / pulsa...", label_visibility="collapsed")
-
-# 4. Layanan PBB / Menu Cepat
-st.markdown("##### 📱 Layanan Pulsa & PPOB")
-ppob_cols = st.columns(4)
-with ppob_cols[0]:
-    if st.button("📶 Pulsa", use_container_width=True):
-        st.toast("Fitur Pulsa dipilih")
-with ppob_cols[1]:
-    if st.button("🌐 Kuota", use_container_width=True):
-        st.toast("Fitur Kuota Data dipilih")
-with ppob_cols[2]:
-    if st.button("⚡ PLN", use_container_width=True):
-        st.toast("Fitur Token PLN dipilih")
-with ppob_cols[3]:
-    if st.button("💳 E-Money", use_container_width=True):
-        st.toast("Fitur E-Money dipilih")
-
+# Judul Aplikasi
+st.title("🏪 Minimarket Online Berkah")
+st.write("Belanja kebutuhan harian lebih mudah dan cepat")
 st.markdown("---")
 
-# 5. Kategori Pilihan (Filter)
-categories = ["Semua", "Sembako", "Minuman", "Perawatan"]
-selected_category = st.selectbox("Pilih Kategori:", categories, label_visibility="collapsed")
-
-# 6. Banner Promo Voucher
-st.markdown("""
-    <div class="promo-banner">
-        🔥 Gunakan Voucher <b>FLASHMARTINA</b> untuk Diskon Rp 10.000!
-    </div>
-""", unsafe_allow_html=True)
-
-# 7. Data Produk Katalog
+# Data Produk Minimarket
 products = [
-    {"id": 1, "name": "Minyak Goreng 2L", "category": "Sembako", "stock": 25, "price": 38000, "icon": "🍳"},
-    {"id": 2, "name": "Beras Premium 5kg", "category": "Sembako", "stock": 15, "price": 69000, "icon": "🌾"},
-    {"id": 3, "name": "Susu UHT Ultra 1L", "category": "Minuman", "stock": 30, "price": 19500, "icon": "🥛"},
-    {"id": 4, "name": "Mie Instan (1 Dus)", "category": "Sembako", "stock": 12, "price": 115000, "icon": "📦"}
+    {"id": 1, "name": "Minyak Goreng 2L", "price": 35000},
+    {"id": 2, "name": "Beras Premium 5kg", "price": 68000},
+    {"id": 3, "name": "Gula Pasir 1kg", "price": 15500},
+    {"id": 4, "name": "Telur Ayam 1kg", "price": 28000},
+    {"id": 5, "name": "Mie Instan (1 Bungkus)", "price": 3000},
+    {"id": 6, "name": "Susu UHT 1L", "price": 19000},
+    {"id": 7, "name": "Teh Celup Kotak", "price": 9000},
+    {"id": 8, "name": "Sabun Mandi Batang", "price": 4500}
 ]
 
-# Inisialisasi Keranjang
+# Inisialisasi State
 if "cart" not in st.session_state:
     st.session_state.cart = []
+if "last_checkout" not in st.session_state:
+    st.session_state.last_checkout = None
 
-st.markdown("### 🛒 Katalog Produk - FlashMart Pusat")
+# Layout Kolom
+col1, col2 = st.columns([2, 1])
 
-# Filter berdasarkan pencarian atau kategori
-filtered_products = [
-    p for p in products 
-    if (selected_category == "Semua" or p["category"] == selected_category) and 
-       (search_query.lower() in p["name"].lower() if search_query else True)
-]
-
-# 8. Menampilkan Produk dalam Grid 2 Kolom (Ala Mobile Apps)
-grid_cols = st.columns(2)
-for index, product in enumerate(filtered_products):
-    with grid_cols[index % 2]:
-        st.markdown(f"""
-            <div class="product-card">
-                <div style="font-size: 36px; margin-bottom: 5px;">{product['icon']}</div>
-                <div style="font-weight: bold; font-size: 14px; height: 40px; color: #333;">{product['name']}</div>
-                <div style="font-size: 11px; color: #777; margin-top: 5px;">Stok: {product['stock']}</div>
-                <div style="color: #e74c3c; font-weight: bold; font-size: 15px; margin: 8px 0;">Rp {product['price']:,}</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        # Tombol Aksi: Keranjang & Beli
-        btn_col1, btn_col2 = st.columns(2)
-        with btn_col1:
-            if st.button("➕ Keranjang", key=f"cart_{product['id']}", use_container_width=True):
+with col1:
+    st.subheader("Daftar Produk")
+    grid_cols = st.columns(3)
+    for index, product in enumerate(products):
+        with grid_cols[index % 3]:
+            st.markdown(f"""
+                <div class="product-card">
+                    <h4>{product['name']}</h4>
+                    <p style="color: #e74c3c; font-weight: bold;">Rp {product['price']:,}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("Tambah", key=f"add_{product['id']}"):
                 found = False
                 for item in st.session_state.cart:
                     if item["id"] == product["id"]:
@@ -133,24 +65,99 @@ for index, product in enumerate(filtered_products):
                         found = True
                         break
                 if not found:
-                    st.session_state.cart.append({**product, "quantity": 1})
-                st.toast(f"{product['name']} masuk keranjang!")
-        with btn_col2:
-            if st.button("⚡ Beli", key=f"buy_{product['id']}", type="primary", use_container_width=True):
-                st.success(f"Berhasil membeli {product['name']} seharga Rp {product['price']:,}!")
+                    st.session_state.cart.append({
+                        "id": product["id"],
+                        "name": product["name"],
+                        "price": product["price"],
+                        "quantity": 1
+                    })
+                st.success(f"{product['name']} ditambahkan!")
+                st.rerun()
 
-# 9. Ringkasan Keranjang Belanja di Bagian Bawah
-st.markdown("---")
-st.subheader("🛍️ Ringkasan Keranjang Anda")
-if not st.session_state.cart:
-    st.info("Belum ada produk di keranjang.")
-else:
-    total_belanja = sum(item["price"] * item["quantity"] for item in st.session_state.cart)
-    for item in st.session_state.cart:
-        st.write(f"- {item['name']} ({item['quantity']}x) = Rp {item['price'] * item['quantity']:,}")
+with col2:
+    st.subheader("🛒 Keranjang Belanja")
     
-    st.markdown(f"**Total Pembayaran: Rp {total_belanja:,}**")
-    if st.button("Proses Checkout Sekarang", type="primary", use_container_width=True):
-        st.success("Checkout Berhasil! Terima kasih telah berbelanja di FlashMart.")
-        st.session_state.cart = []
-        st.rerun()
+    if not st.session_state.cart:
+        st.info("Keranjang masih kosong.")
+    else:
+        total = 0
+        for item in st.session_state.cart:
+            item_total = item["price"] * item["quantity"]
+            total += item_total
+            
+            st.write(f"**{item['name']}**")
+            st.text(f"{item['quantity']} x Rp {item['price']:,} = Rp {item_total:,}")
+            
+            if st.button("Hapus", key=f"del_{item['id']}"):
+                st.session_state.cart = [i for i in st.session_state.cart if i["id"] != item["id"]]
+                st.rerun()
+            st.markdown("---")
+            
+        st.markdown(f"### Total: Rp {total:,}")
+        
+        if st.button("Checkout & Cetak Struk", type="primary"):
+            # Simpan data transaksi terakhir untuk dicetak struknya
+            st.session_state.last_checkout = {
+                "items": list(st.session_state.cart),
+                "total": total
+            }
+            st.session_state.cart = []
+            st.success("Pesanan berhasil diproses!")
+            st.rerun()
+
+# Bagian Tampilan Struk Belanja Terakhir
+if st.session_state.last_checkout:
+    st.markdown("---")
+    st.subheader("🧾 Struk Belanja Terakhir")
+    
+    # Buat format HTML untuk struk (gaya struk kasir thermal)
+    receipt_items_html = ""
+    for item in st.session_state.last_checkout["items"]:
+        subtotal = item["price"] * item["quantity"]
+        receipt_items_html += f"""
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>{item['name']} ({item['quantity']}x)</span>
+                <span>Rp {subtotal:,}</span>
+            </div>
+        """
+    
+    receipt_total = st.session_state.last_checkout["total"]
+    
+    receipt_html = f"""
+    <div id="print-area" style="font-family: 'Courier New', Courier, monospace; width: 300px; background: #fff; padding: 15px; border: 1px dashed #333; color: #000;">
+        <div style="text-align: center;">
+            <h3>MINIMARKET BERKAH</h3>
+            <p style="font-size: 12px;">Jl. Contoh No. 123, Kota Anda</p>
+            <p style="font-size: 12px;">--------------------------------</p>
+        </div>
+        <div style="font-size: 13px; margin-bottom: 10px;">
+            {receipt_items_html}
+        </div>
+        <div style="font-size: 13px; border-top: 1px dashed #333; padding-top: 5px;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                <span>TOTAL:</span>
+                <span>Rp {receipt_total:,}</span>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 15px; font-size: 12px;">
+            <p>Terima Kasih Telah Berbelanja</p>
+            <p>Barang yang sudah dibeli tidak dapat ditukar</p>
+        </div>
+    </div>
+    <br>
+    <button onclick="printReceipt()" style="background-color: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">🖨️ Cetak Struk</button>
+
+    <script>
+    function printReceipt() {{
+        var printContents = document.getElementById('print-area').innerHTML;
+        var originalContents = document.body.innerHTML;
+        document.body.innerHTML = printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+        window.location.reload();
+    }}
+    </script>
+    """
+    
+    # Render komponen HTML & JavaScript untuk tombol cetak struk
+    components.html(receipt_html, height=350)
