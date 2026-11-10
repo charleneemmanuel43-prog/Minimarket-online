@@ -1,9 +1,10 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 # Konfigurasi halaman
 st.set_page_config(page_title="Minimarket Online Berkah", page_icon="🏪", layout="wide")
 
-# CSS Styling tambahan (harus dibungkus dalam st.markdown dengan unsafe_allow_html=True)
+# CSS Styling tambahan
 st.markdown("""
     <style>
     .product-card {
@@ -35,20 +36,17 @@ products = [
     {"id": 8, "name": "Sabun Mandi Batang", "price": 4500}
 ]
 
-# Inisialisasi Keranjang Belanja di Session State Streamlit
+# Inisialisasi State
 if "cart" not in st.session_state:
     st.session_state.cart = []
+if "last_checkout" not in st.session_state:
+    st.session_state.last_checkout = None
 
-# Layout Kolom: Kiri untuk Produk, Kanan untuk Keranjang
-col1, col2 = st.kol2 = st.columns([2, 1]) if hasattr(st, 'columns') else (st.container(), st.container())
-
-# Jika menggunakan st.columns versi standar:
+# Layout Kolom
 col1, col2 = st.columns([2, 1])
 
 with col1:
     st.subheader("Daftar Produk")
-    
-    # Menampilkan produk dalam grid 3 kolom
     grid_cols = st.columns(3)
     for index, product in enumerate(products):
         with grid_cols[index % 3]:
@@ -60,7 +58,6 @@ with col1:
             """, unsafe_allow_html=True)
             
             if st.button("Tambah", key=f"add_{product['id']}"):
-                # Cek apakah produk sudah ada di keranjang
                 found = False
                 for item in st.session_state.cart:
                     if item["id"] == product["id"]:
@@ -98,7 +95,69 @@ with col2:
             
         st.markdown(f"### Total: Rp {total:,}")
         
-        if st.button("Checkout Pesanan", type="primary"):
-            st.success(f"Terima kasih! Pesanan senilai Rp {total:,} berhasil diproses.")
+        if st.button("Checkout & Cetak Struk", type="primary"):
+            # Simpan data transaksi terakhir untuk dicetak struknya
+            st.session_state.last_checkout = {
+                "items": list(st.session_state.cart),
+                "total": total
+            }
             st.session_state.cart = []
+            st.success("Pesanan berhasil diproses!")
             st.rerun()
+
+# Bagian Tampilan Struk Belanja Terakhir
+if st.session_state.last_checkout:
+    st.markdown("---")
+    st.subheader("🧾 Struk Belanja Terakhir")
+    
+    # Buat format HTML untuk struk (gaya struk kasir thermal)
+    receipt_items_html = ""
+    for item in st.session_state.last_checkout["items"]:
+        subtotal = item["price"] * item["quantity"]
+        receipt_items_html += f"""
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>{item['name']} ({item['quantity']}x)</span>
+                <span>Rp {subtotal:,}</span>
+            </div>
+        """
+    
+    receipt_total = st.session_state.last_checkout["total"]
+    
+    receipt_html = f"""
+    <div id="print-area" style="font-family: 'Courier New', Courier, monospace; width: 300px; background: #fff; padding: 15px; border: 1px dashed #333; color: #000;">
+        <div style="text-align: center;">
+            <h3>MINIMARKET BERKAH</h3>
+            <p style="font-size: 12px;">Jl. Contoh No. 123, Kota Anda</p>
+            <p style="font-size: 12px;">--------------------------------</p>
+        </div>
+        <div style="font-size: 13px; margin-bottom: 10px;">
+            {receipt_items_html}
+        </div>
+        <div style="font-size: 13px; border-top: 1px dashed #333; padding-top: 5px;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                <span>TOTAL:</span>
+                <span>Rp {receipt_total:,}</span>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 15px; font-size: 12px;">
+            <p>Terima Kasih Telah Berbelanja</p>
+            <p>Barang yang sudah dibeli tidak dapat ditukar</p>
+        </div>
+    </div>
+    <br>
+    <button onclick="printReceipt()" style="background-color: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">🖨️ Cetak Struk</button>
+
+    <script>
+    function printReceipt() {{
+        var printContents = document.getElementById('print-area').innerHTML;
+        var originalContents = document.body.innerHTML;
+        document.body.innerHTML = printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+        window.location.reload();
+    }}
+    </script>
+    """
+    
+    # Render komponen HTML & JavaScript untuk tombol cetak struk
+    components.html(receipt_html, height=350)
